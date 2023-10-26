@@ -16,7 +16,7 @@ This project is a continuation of RESTful API designed to retrieve different rec
 ## Run Instruction
 1. Clone this repository:
     ```
-    git clone https://github.com/CodieTamida/CPSC-449-Project2.git
+    $ git clone https://github.com/CodieTamida/CPSC-449-Project2.git
     ```
 2. Open directory to `project1`
     ```
@@ -25,21 +25,21 @@ This project is a continuation of RESTful API designed to retrieve different rec
 3. Initialize Python virtual environment and install required packages
 
     ```
-    make
+    $ make
     ```
 4. Give permission
     ```
-    chmod 777 ./api/bin/init.sh
+    $ chmod 777 ./api/bin/init.sh
     ```
 5. Setup Database
     ```
-    ./api/bin/init.sh
+    $ ./api/bin/init.sh
     ```
 6. Return to main directory `CPSC-449-Project2`
     ```
-    cd ..
+    $ cd ..
     ```
 7. Start server
     ```
-    foreman start
+    $ foreman start
     ```
