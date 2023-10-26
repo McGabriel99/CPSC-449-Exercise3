@@ -14,11 +14,9 @@ from typing import Optional
 from .database_query import (
     DBException,
     check_enrollment_eligibility,
-    check_student_on_waitlist,
     check_user_role,
     complete_registration,
     get_available_classes,
-    remove_student_from_waitlist,
     update_student_registration_status,
     addClass,
     check_class_exists,
@@ -32,7 +30,11 @@ from .database_query import (
     get_enrolled_students,
     get_dropped_students,
     get_waitlist_status,
-    get_waitlist
+    get_waitlist,
+    check_is_enrolled,
+    check_is_instructor_of_section,
+    get_waitlisted_students,
+    drop_student
 )
 from .models import (
     AvailableClassResponse,
@@ -41,8 +43,6 @@ from .models import (
     QueryStatus,
     Registration,
     RegistrationStatus,
-    RemoveFromWaitlistRes,
-    RemoveWaitlistReq,
     UserRole,
     DropCourseResponse,
     AddClassResponse,
@@ -55,13 +55,16 @@ from .models import (
     FreezeEnrollmentResponse,
     EnrollmentListResponse,
     RecordsEnrollmentResponse,
+    RecordsWaitlistResponse,
     RecordsDroppedResponse,
     WaitlistPositionReq,
     WaitlistPositionRes,
     ViewWaitlistReq,
     ViewWaitlistRes,
     WaitlistStudents,
-    WaitlistPositionList
+    WaitlistPositionList,
+    DropStudentRequest,
+    DroppedResponse
 )
 
 app = FastAPI()
@@ -269,16 +272,40 @@ async def list_enrollment(instructor_id: int, section_number: Optional[int] = No
 
     Args:
         instructor_id (int): Instructor id
+        section_number (Optional[int]): Section number (optional)
+        course_code (Optional[str]): Course code (optional)
 
     Returns:
         RecordsEnrollmentResponse: RecordsEnrollmentResponse model
     """
     role = check_is_instructor(db_connection, instructor_id)
     if role == UserRole.NOT_FOUND or role != UserRole.INSTRUCTOR:
+        logger.info('List Class Enrollment not authorized for role')
         raise HTTPException(status_code = status.HTTP_401_UNAUTHORIZED, detail= f'List Class Enrollment not authorized for role: {role}')
     result = get_enrolled_students(db_connection, instructor_id, course_code, section_number)
     logger.info('Successfully executed list_enrollment')
     return RecordsEnrollmentResponse(enrolled_students = result)
+
+# TODO: test this endpoint 
+@app.get(path="/classWaitlist", operation_id="list_waitlist", response_model=RecordsWaitlistResponse)
+async def list_waitlist(instructor_id: int, section_number: Optional[int] = None, course_code: Optional[str] = None):
+    """API to fetch list of enrolled students for a given instructor.
+
+    Args:
+        instructor_id (int): Instructor id
+        section_number (Optional[int]): Section number (optional)
+        course_code (Optional[str]): Course code (optional)
+
+    Returns:
+        RecordsWaitlistResponse: RecordsWaitlistResponse model
+    """
+    role = check_is_instructor(db_connection, instructor_id)
+    if role == UserRole.NOT_FOUND or role != UserRole.INSTRUCTOR:
+        logger.info('List Class Waitlist not authorized for role')
+        raise HTTPException(status_code = status.HTTP_401_UNAUTHORIZED, detail= f'List Class Waitlist not authorized for role: {role}')
+    result = get_waitlisted_students(db_connection, instructor_id, course_code, section_number)
+    logger.info('Successfully executed list_waitlist')
+    return RecordsWaitlistResponse(waitlisted_students = result)
 
 @app.get(path="/classDropped", operation_id="list_dropped", response_model=RecordsDroppedResponse)
 async def list_dropped(instructor_id: int, section_number: Optional[int] = None, course_code: Optional[str] = None):
@@ -294,52 +321,49 @@ async def list_dropped(instructor_id: int, section_number: Optional[int] = None,
     """
     role = check_is_instructor(db_connection, instructor_id)
     if role == UserRole.NOT_FOUND or role != UserRole.INSTRUCTOR:
+        logger.info('List Class Dropped not authorized for role')
         raise HTTPException(status_code = status.HTTP_401_UNAUTHORIZED, detail= f'List Class Dropped not authorized for role: {role}')
     result = get_dropped_students(db_connection, instructor_id, course_code, section_number)
     logger.info('Successfully executed list_dropped')
     return RecordsDroppedResponse(dropped_students = result)
 
-##########   INSTRUCTOR ENDPOINTS ENDS    ######################
+@app.post(path="/dropStudent", operation_id="instructor_drop_student", response_model=DroppedResponse)
+async def instructor_drop_student(DropRequest: DropStudentRequest):
+    """API to drop a student from a section.
 
-
-
-########   WAITLIST REMOVE   ###########
-@app.delete(path="/remove_from_waitlist", operation_id="remove_from_waitlist", response_model = RemoveFromWaitlistRes)
-async def remove_from_waitlist(remove_waitlist_req: RemoveWaitlistReq):
-    """API to remove a student from the waitlist.
     Args:
-        student_id: int
-        course_code: str
-        section_number: int
+        instructor_id (int): Instructor id
+        student_id (int): Student id
+        section_number (int): Section number
+        course_code (str): Course code
+
     Returns:
-        RemoveFromWaitlistResponse: RemoveFromWaitlistResponse model
+        droppedResponse: droppedResponse model
     """
-    try:
-        # Check if the student is on the waitlist for the specified course and section
-        is_on_waitlist = check_student_on_waitlist(db_connection=db_connection, 
-                                                   student_id=remove_waitlist_req.student_id, 
-                                                   course_code=remove_waitlist_req.course_code,
-                                                   section_number=remove_waitlist_req.section_number)
-        if not is_on_waitlist:
-            return RemoveFromWaitlistRes(status="Student is not on the waitlist")
-
-        # Remove the student from the waitlist
-        result = remove_student_from_waitlist(db_connection=db_connection, 
-                                              student_id=remove_waitlist_req.student_id, 
-                                              course_code=remove_waitlist_req.course_code,
-                                              section_number=remove_waitlist_req.section_number)
-        
+    role = check_is_instructor(db_connection, DropRequest.instructor_id)
+    # # check if action is being perform by instructor 
+    if role == UserRole.NOT_FOUND or role != UserRole.INSTRUCTOR:
+        logger.info('Drop Student not authorized for role')
+        raise HTTPException(status_code = status.HTTP_401_UNAUTHORIZED, detail= f'Drop Student not authorized for role: {role}')
+    # # check if instructor teaches the section 
+    check_instructor = check_is_instructor_of_section(db_connection, DropRequest)
+    if check_instructor == False:
+        logger.info('Instructor does not teach the section')
+        raise HTTPException(status_code = status.HTTP_401_UNAUTHORIZED, detail= f'Instructor does not teach the section')
+    # # check if student is enrolled in the section or waitlisted
+    check_status = check_is_enrolled(db_connection, DropRequest)
+    if check_status == False:
+        logger.info('Student is not enrolled in the section')
+        raise HTTPException(status_code = status.HTTP_401_UNAUTHORIZED, detail= f'Student is not enrolled in the section')
+    try:    
+        result = drop_student(db_connection, DropRequest)
+        logger.info('Successfully executed drop_student')
         if result == QueryStatus.SUCCESS:
-            return RemoveFromWaitlistRes(status="Successfully removed student from the waitlist")
-        else:
-            return RemoveFromWaitlistRes(status="Failed to remove student from the waitlist")
-    
+            return DroppedResponse(drop_status = "Student was dropped")
     except DBException as err:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=err.error_detail)
-
-
-
-
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,detail=err.error_detail)
+    
+##########   INSTRUCTOR ENDPOINTS ENDS    ######################
 
 async def main():
     """Start the server."""

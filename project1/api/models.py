@@ -25,7 +25,6 @@ class EnrollmentResponse(BaseModel):
     enrollment_date: Optional[datetime] = None
 
 class EnrollmentRequest(BaseModel):
-    role: str
     section_number: int
     course_code: str
     student_id: int
@@ -107,6 +106,9 @@ class RecordsEnrollmentResponse(BaseModel):
 class RecordsDroppedResponse(BaseModel):
     dropped_students: List[EnrollmentListResponse]
 
+class RecordsWaitlistResponse(BaseModel):
+    waitlisted_students: List[EnrollmentListResponse]
+
 class WaitlistPositionReq(BaseModel):
     # section_number: int
     # course_code: str
@@ -124,7 +126,6 @@ class ViewWaitlistReq(BaseModel):
     section_number: int
     course_code: str
 
-
 class WaitlistStudents(BaseModel):
     student_id: int
     student_name: str
@@ -133,33 +134,11 @@ class WaitlistStudents(BaseModel):
 class ViewWaitlistRes(BaseModel):
     waitlisted_students: List[WaitlistStudents]
 
-
-#Waitlist
-class WaitlistPositionList(BaseModel):
-    section_number: int
-    course_code: str
-    waitlist_position: int
-
-class WaitlistPositionRes(BaseModel):
-    waitlist_positions: List[WaitlistPositionList]
-    
-class RemoveWaitlistReq(BaseModel):
+class DropStudentRequest(BaseModel):
+    instructor_id: int
     student_id: int
     section_number: int
     course_code: str
 
-
-class ViewWaitlistReq(BaseModel):
-    section_number: int
-    course_code: str
-
-class WaitlistStudents(BaseModel):
-    student_id: int
-    student_name: str
-    enrollment_date: datetime
-
-class ViewWaitlistRes(BaseModel):
-    waitlisted_students: List[WaitlistStudents]
-
-class RemoveFromWaitlistRes(BaseModel):
-    status: str
+class DroppedResponse(BaseModel):
+    drop_status: str
