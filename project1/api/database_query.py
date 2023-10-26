@@ -12,11 +12,11 @@ from .models import (
     QueryStatus,
     Registration,
     RegistrationStatus,
+    RemoveFromWaitlistRes,
     UserRole,
     EnrollmentListResponse,
     WaitlistStudents,
-    WaitlistPositionList,
-    DropStudentRequest
+    WaitlistPositionList
 )
 
 LIST_AVAILABLE_SQL_QUERY = """
@@ -80,6 +80,7 @@ def check_user_role(db_connection: Connection, student_id: int)-> Union[str, Non
     result = UserRole.NOT_FOUND
     for row in rows:
         result = row[0]
+    print(result)
     return result
 
 
@@ -127,9 +128,9 @@ def check_status_query(db_connection: Connection, enrollment_request: Enrollment
         rows =  cursor.execute(check_status_query)
         if rows.arraysize == 0:
             raise HTTPException(status_code= status.HTTP_400_BAD_REQUEST, detail= f'Record not found')
-        row = rows.fetchone()
-        if row[0] == RegistrationStatus.ENROLLED:
-            return EnrollmentResponse(enrollment_status="already enrolled", enrollment_date=row[1])
+        for row in rows:
+            if row[0] == RegistrationStatus.ENROLLED:
+                return EnrollmentResponse(enrollment_status="already enrolled", enrollment_date=row[1])
     except Exception as err:
         logger.error(err)
         raise DBException(error_detail = 'Fail to register')
@@ -236,7 +237,7 @@ def check_is_instructor(db_connection: Connection, instructor_id: int)-> Union[s
     cursor = db_connection.cursor()
     rows =  cursor.execute(query)
     if rows.arraysize == 0:
-        raise HTTPException(status_code= status.HTTP_400_BAD_REQUEST, detail= f'Record not found for given CWID: {instructor_id}')
+        raise HTTPException(status_code= status.HTTP_400_BAD_REQUEST, detail= f'Record not found for given student_id:{student_id}')
     result = UserRole.NOT_FOUND
     for row in rows:
         result = row[0]
@@ -348,8 +349,8 @@ def freezeEnrollment(db_connection: Connection, course_code: str, section_number
 
     return QueryStatus.SUCCESS
 
-# enrolled students
-def get_enrolled_students(db_connection: Connection, instructor_id: int, course_code: Optional[str] = None, section_number: Optional[int] = None) -> List[EnrollmentListResponse]:
+
+def get_enrolled_students(db_connection: Connection, instructor_id: int, course_code: Optional[str] = None, section_number: Optional[int] = None) -> list:
     logger.info('Getting enrolled students for instructor with CWID:')
     query = """
                 SELECT
@@ -393,53 +394,8 @@ def get_enrolled_students(db_connection: Connection, instructor_id: int, course_
                       "status": row[6]} for row in enrollment]
     return results
 
-# waitlisted students
-def get_waitlisted_students(db_connection: Connection, instructor_id: int, course_code: Optional[str] = None, section_number: Optional[int] = None) -> List[EnrollmentListResponse]:
-    logger.info('Getting enrolled students for instructor with CWID:')
-    query = """
-                SELECT
-                    Users.CWID AS StudentCWID,
-                    Users.Name AS StudentFirstName,
-                    Users.LastName AS StudentLastName,
-                    Class.CourseCode AS CourseCode,
-                    Section.SectionNumber AS SectionNumber,
-                    Class.Name AS ClassName,
-                    RegistrationList.Status AS Status
-                FROM
-                    RegistrationList
-                    JOIN Users ON RegistrationList.StudentID = Users.CWID
-                    JOIN Section ON RegistrationList.CourseCode = Section.CourseCode AND RegistrationList.SectionNumber = Section.SectionNumber
-                    JOIN Class ON Section.CourseCode = Class.CourseCode
-                WHERE
-                    Section.InstructorID = ?
-                    AND RegistrationList.Status = 'waitlisted'
-            """
-    params = [instructor_id]
-    if course_code is not None:
-        query += " AND Section.CourseCode = ?"
-        params.append(course_code)
-    if section_number is not None:
-        query += " AND Section.SectionNumber = ?"
-        params.append(section_number)
-    else:
-        query += " ORDER BY Class.CourseCode, Section.SectionNumber, Users.LastName, Users.Name"
-    cur = db_connection.execute(query, tuple(params))
-    enrollment = cur.fetchall()
-    if not enrollment:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Waitlist for instructor not found"
-        )
-    results = [{"student_cwid": row[0],
-                      "student_first_name": row[1],
-                      "student_last_name": row[2],
-                      "course_code": row[3],
-                      "section_number": row[4],
-                      "class_name": row[5],
-                      "status": row[6]} for row in enrollment]
-    return results
-
 # dropped students 
-def get_dropped_students(db_connection: Connection, instructor_id: int,course_code: Optional[str] = None, section_number: Optional[int] = None) -> List[EnrollmentListResponse]:
+def get_dropped_students(db_connection: Connection, instructor_id: int,course_code: Optional[str] = None, section_number: Optional[int] = None) -> list:
     logger.info('Getting dropped students for instructor')
     query = """
                 SELECT
@@ -483,7 +439,7 @@ def get_dropped_students(db_connection: Connection, instructor_id: int,course_co
                       "status": row[6]} for row in enrollment]
     return results
 
-def get_waitlist_status(db_connection: Connection, student_id: int) -> str:
+def get_waitlist_status(db_connection: Connection, student_id: int) -> list:
     logger.info('Checking waitlist position for student ', str(student_id))
     query = f"""
         WITH WaitlistPosition AS (
@@ -520,7 +476,6 @@ def get_waitlist_status(db_connection: Connection, student_id: int) -> str:
             course_code = row[1]
         )
         result.append(waitlist)
-    print(result)
     return result
 
 def get_waitlist(db_connection: Connection, course_code: str, section_number: int) -> list:
@@ -559,49 +514,34 @@ def get_waitlist(db_connection: Connection, course_code: str, section_number: in
     logger.info(result)
     return result
 
-# check if student is enrolled 
-def check_is_enrolled(db_connection, DropRequest) -> bool:
-    query = """SELECT Status FROM RegistrationList WHERE StudentID = ? AND CourseCode = ? AND SectionNumber = ?"""
-    cursor = db_connection.cursor()
-    cursor.execute(query, (DropRequest.student_id, DropRequest.course_code, DropRequest.section_number))
-    result = cursor.fetchone()
-    if result is not None and (result[0] == "enrolled" or result[0] == "waitlisted"):
-        return True
-    else:
-        return False
-    
-# check if instructor is the instructor of the section 
-def check_is_instructor_of_section(db_connection, DropRequest) -> bool:
-    query = """SELECT InstructorID FROM Section WHERE CourseCode = ? AND SectionNumber = ?"""
-    cursor = db_connection.cursor()
-    cursor.execute(query, (DropRequest.course_code, DropRequest.section_number))
-    result = cursor.fetchone()
-    if result is not None and result[0] == DropRequest.instructor_id:
-        return True
-    else:
-        return False
 
-# drop a student 
-def drop_student(db_connection: Connection, DropRequest: DropStudentRequest) -> str:
-    logger.info('Dropping student')
-    drop = """
-                UPDATE RegistrationList SET Status = 'dropped' WHERE StudentID = ? AND CourseCode = ? AND SectionNumber = ?
-    """
-    update_enrollment = """
-                UPDATE Section SET CurrentEnrollment = CurrentEnrollment - 1 WHERE CourseCode = ? AND SectionNumber = ?
-    """
-    params = [DropRequest.student_id, DropRequest.course_code, DropRequest.section_number]
-    cursor = db_connection.cursor()
-    cursor.execute("BEGIN")
+
+
+#Remove from Waitlist
+def remove_student_from_waitlist(db_connection: Connection, student_id: int, course_code: str, section_number: int) -> RemoveFromWaitlistRes:
     try:
-        cursor.execute(drop, tuple(params))
-        cursor.execute(update_enrollment, (DropRequest.course_code, DropRequest.section_number))
+        # Check if the student is on the waitlist for the specified course and section
+        is_on_waitlist = check_student_on_waitlist(db_connection, student_id, course_code, section_number)
+        if not is_on_waitlist:
+            return RemoveFromWaitlistRes(status="Student is not on the waitlist")
+
+        # Remove the student from the waitlist
+        remove_query = f"""
+        DELETE FROM RegistrationList WHERE StudentID = {student_id} AND CourseCode = '{course_code}' AND SectionNumber = {section_number} AND Status = 'waitlisted'
+        """
+        cursor = db_connection.cursor()
+        cursor.execute("BEGIN")
+        cursor.execute(remove_query)
         cursor.execute("COMMIT")
+        return RemoveFromWaitlistRes(status="Successfully removed student from the waitlist")
+
     except Exception as err:
-        logger.error(err)
-        cursor.execute("ROLLBACK")
-        logger.info('Rolling back transaction')
-        raise DBException(error_detail = 'Fail to drop student')
-    finally:
-        cursor.close()
-    return QueryStatus.SUCCESS
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(err))
+
+def check_student_on_waitlist(db_connection: Connection, student_id: int, course_code: str, section_number: int) -> bool:
+    query = f"""
+    SELECT 1 FROM RegistrationList WHERE StudentID = {student_id} AND CourseCode = '{course_code}' AND SectionNumber = {section_number} AND Status = 'waitlisted'
+    """
+    cursor = db_connection.cursor()
+    cursor.execute(query)
+    return cursor.fetchone() is not None

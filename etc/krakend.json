@@ -1,0 +1,81 @@
+{
+    "$schema": "https://www.krakend.io/schema/v2.4/krakend.json",
+    "version": 3,
+    "extra_config": {
+        "router": {
+            "return_error_msg": true
+        }
+    },
+    "endpoints" : [
+        {
+            "endpoint" : "/api/register",
+            "method" : "POST",
+            "backend" : [
+                {
+                    "url_pattern": "/register",
+                    "method" : "POST",
+                    "host": ["http://127.0.0.1:8000"],
+                    "extra_config": {
+                        "backend/http": {
+                            "return_error_details": "auth_service"
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "endpoint" : "/api/login",
+            "method": "POST",
+            "backend": [
+                {
+                    "url_pattern": "/login",
+                    "method" : "POST",
+                    "host" : ["http://127.0.0.1:8000"],
+                    "extra_config": {
+                        "backend/http": {
+                            "return_error_details": "auth_service"
+                        }
+                    }
+                }
+            ],
+            "extra_config": {
+                "auth/signer": {
+                    "alg" : "RS256",
+                    "kid" : "GROUP_9_SECRET_KEY",
+                    "jwk_local_path" : "./etc/jwk_private_key.json",
+                    "keys_to_sign": ["access_token", "refresh_token"],
+                    "disable_jwk_security": true
+                }
+            }
+        }, 
+        {
+            "endpoint" : "/api/enrollment",
+            "method" : "POST",
+            "backend" : [
+                {
+                    "url_pattern": "/enrollment",
+                    "method" :"POST",
+                    "host" : [
+                        "http://127.0.0.1:5100"
+                    ],
+                    "extra_config": {
+                        "backend/http": {
+                            "return_error_details": "enrollment_service"
+                        }
+                    }
+                }
+            ],
+            "extra_config": {
+                "auth/validator": {
+                    "alg": "RS256",
+                    "jwk_local_path": "./etc/jwk_public_key.json",
+                    "roles_key": "roles",
+                    "roles_key_is_nested": false,
+                    "roles" : ["Student"],                    
+                    "disable_jwk_security": true,
+                    "operation_debug": true
+                }
+            }
+        }
+    ]
+}
