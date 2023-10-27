@@ -6,7 +6,11 @@ from helpers.response import raise_exception
 from helpers.auth import hash_password
 from random import choice
 from models import *
+import itertools
 from helpers.response import *
+
+read_dbs = ["var/secondary_2/fuse/auth.db","var/secondary_1/fuse/auth.db"]
+index = itertools.cycle(range(0, len(read_dbs)))
 
 def get_db():
     with contextlib.closing(sqlite3.connect("var/primary/fuse/auth.db")) as db:
@@ -14,8 +18,7 @@ def get_db():
         yield db
 
 def get_db_reads():
-    read_dbs = ["var/primary/fuse/auth.db","var/secondary_1/fuse/auth.db", "var/secondary_1/fuse/auth.db"]
-    target_db = choice(read_dbs)
+    target_db = read_dbs[next(index)]
     with contextlib.closing(sqlite3.connect(target_db)) as db:
         db.row_factory = sqlite3.Row
         yield db
