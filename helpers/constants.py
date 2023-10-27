@@ -1,5 +1,5 @@
 ROLE = {
-    "registrar": 1,
-    "instructor": 2,
-    "student": 3
+    "Registrar": 1,
+    "Instructor": 2,
+    "Student": 3
 }
