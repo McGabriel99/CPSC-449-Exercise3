@@ -47,9 +47,9 @@ class QueryStatus(str, Enum):
     FAILED = "failed"
 
 class UserRole(str, Enum):
-    STUDENT = "student"
-    INSTRUCTOR = "instructor"
-    REGISTRAR = "registrar"
+    STUDENT = "Student"
+    INSTRUCTOR = "Instructor"
+    REGISTRAR = "Registrar"
     NOT_FOUND = "not_found"
 
 class DropCourseResponse(BaseModel):

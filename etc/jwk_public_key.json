@@ -1,0 +1,10 @@
+{"keys" : [
+    {
+        "alg": "RS256",
+        "e": "AQAB",
+        "kid": "GROUP_9_SECRET_KEY",
+        "kty": "RSA",
+        "n": "6_tGU_W0AzsXWyuQ9djuS853PNPpH1i5uyCWnfPOloAhIqbaNiTBrzngD_iocV-VxE9Wm40SdS7cqwuNLPuaQ7wAjFQoHXD3ugdSSywVWiBwSa0JHdcR1KhNszzMWk-bspNL6h8kEIdA-XDlzvpYSLO5SV1TNL1Spp_bmQ6JLzb7Xqx8GPeX7pd54bK2-50tm8V_xmeI-D7XAeBUiPthvT3-VA-z0xtI2W_zW_53DAeiTfzGppz0gZQK1WVGoY4WsJudPzmhvcc3IH170Vgz6dXhVxIFef8oIRHzVnu8CEG-8QbitS6CfXiiZpHo_sihVxu6PrwaVZF0hjvAemVIxw"
+    }
+]
+}

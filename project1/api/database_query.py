@@ -127,9 +127,9 @@ def check_status_query(db_connection: Connection, enrollment_request: Enrollment
         rows =  cursor.execute(check_status_query)
         if rows.arraysize == 0:
             raise HTTPException(status_code= status.HTTP_400_BAD_REQUEST, detail= f'Record not found')
-        row = rows.fetchone()
-        if row[0] == RegistrationStatus.ENROLLED:
-            return EnrollmentResponse(enrollment_status="already enrolled", enrollment_date=row[1])
+        for row in rows:
+            if row[0] == RegistrationStatus.ENROLLED:
+                return EnrollmentResponse(enrollment_status="already enrolled", enrollment_date=row[1])
     except Exception as err:
         logger.error(err)
         raise DBException(error_detail = 'Fail to register')

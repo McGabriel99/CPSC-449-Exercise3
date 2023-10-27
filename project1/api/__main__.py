@@ -68,7 +68,7 @@ from .models import (
 )
 
 app = FastAPI()
-DATABASE_URL = "./api/share/classes.db"
+DATABASE_URL = "./project1/api/share/classes.db"
 db_connection = sqlite3.connect(DATABASE_URL)
 db_connection.isolation_level = None
 
