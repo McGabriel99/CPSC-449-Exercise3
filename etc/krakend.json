@@ -46,6 +46,9 @@
         {
             "endpoint" : "/api/classes",
             "method" : "GET",
+            "input_query_strings": [
+                "department_name"
+            ],
             "backend" : [
                 {
                     "url_pattern": "/classes",
@@ -139,6 +142,9 @@
         {
             "endpoint" : "/api/waitlist_position",
             "method" : "GET",
+            "input_query_strings": [
+                "student_id"
+            ],
             "backend" : [
                 {
                     "url_pattern": "/waitlist_position",
@@ -201,6 +207,11 @@
         {
             "endpoint" : "/api/classEnrollment",
             "method" : "GET",
+            "input_query_strings": [
+                "instructor_id",
+                "section_number",
+                "course_code"
+            ],
             "backend" : [
                 {
                     "url_pattern": "/classEnrollment",
@@ -232,6 +243,11 @@
         {
             "endpoint" : "/api/classWaitlist",
             "method" : "GET",
+            "input_query_strings": [
+                "instructor_id",
+                "section_number",
+                "course_code"
+            ],
             "backend" : [
                 {
                     "url_pattern": "/classWaitlist",
@@ -263,6 +279,11 @@
         {
             "endpoint" : "/api/classDropped",
             "method" : "GET",
+            "input_query_strings": [
+                "instructor_id",
+                "section_number",
+                "course_code"
+            ],
             "backend" : [
                 {
                     "url_pattern": "/classDropped",
