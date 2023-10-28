@@ -80,6 +80,7 @@
         {
             "endpoint" : "/api/enrollment",
             "method" : "POST",
+            "input_headers": ["x_user", "x_roles"],
             "backend" : [
                 {
                     "url_pattern": "/enrollment",
@@ -135,7 +136,11 @@
                     "roles_key_is_nested": false,
                     "roles" : ["Student"],                    
                     "disable_jwk_security": true,
-                    "operation_debug": true
+                    "operation_debug": true,
+                    "propagate_claims": [
+                        ["sub", "x_user"],
+                        ["roles", "x_roles"]
+                    ]
                 }
             }
         }, 

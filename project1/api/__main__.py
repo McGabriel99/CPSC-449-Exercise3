@@ -4,12 +4,12 @@ from asyncio import run
 from datetime import datetime
 import sqlite3
 
-from fastapi import FastAPI, HTTPException, status
+from fastapi import FastAPI, HTTPException, status, Header
 from fastapi.responses import JSONResponse
 from loguru import logger
 import uvicorn
 from uvicorn.server import Server
-from typing import Optional
+from typing import Optional, Annotated
 
 from .database_query import (
     DBException,
@@ -66,12 +66,12 @@ from .models import (
     DropStudentRequest,
     DroppedResponse
 )
+from functools import wraps
 
 app = FastAPI()
 DATABASE_URL = "./project1/api/share/classes.db"
 db_connection = sqlite3.connect(DATABASE_URL)
 db_connection.isolation_level = None
-
 
 @app.on_event("shutdown")
 async def shutdown():
@@ -102,7 +102,7 @@ async def available_classes(department_name: str):
     return AvailableClassResponse(available_classes = result)
 
 @app.post(path ="/enrollment", operation_id="course_enrollment", response_model= EnrollmentResponse)
-async def course_enrollment(enrollment_request: EnrollmentRequest):
+async def course_enrollment(enrollment_request: EnrollmentRequest, x_user: Annotated[str | None, Header(convert_underscores=False)] = None, x_roles: Annotated[list[str] | None, Header(convert_underscores=False)] = None):
     """Allow enrollment of a course under given section for a student
 
     Args:
@@ -115,8 +115,11 @@ async def course_enrollment(enrollment_request: EnrollmentRequest):
     Returns:
         EnrollmentResponse: EnrollmentResponse model
     """
+    print("x_user =>", x_user)
+    print("x_roles =>", x_roles)
 
     role = check_user_role(db_connection, enrollment_request.student_id)
+    
     if role == UserRole.NOT_FOUND or role != UserRole.STUDENT:
         raise HTTPException(status_code = status.HTTP_401_UNAUTHORIZED, detail= f'Enrollment not authorized for role:{role}')
     check_if_already_enrolled = check_status_query(db_connection, enrollment_request)
