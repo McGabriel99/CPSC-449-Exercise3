@@ -1,9 +1,6 @@
 import base64
 import hashlib
 import secrets
-import os
-import sys
-import json
 import datetime
 
 ALGORITHM = "pbkdf2_sha256"

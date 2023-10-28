@@ -10,8 +10,6 @@ import sqlite3
 
 app = FastAPI()
 
-##### NEED FUNCTIONS: get_db, get_db_reads, verify_password, generate_claims #####
-
 @app.get("/")
 async def root():
     return {"message": "User Authentication services"}

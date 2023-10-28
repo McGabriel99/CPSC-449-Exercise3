@@ -1,7 +1,5 @@
 from pydantic import BaseModel
 
-#User roles (Porject 2)
-
 class NewAccountRequest(BaseModel):
     first_name: str
     last_name: str
