@@ -234,7 +234,7 @@ async def freeze_enrollment(freezeEnrollment_Request: FreezeEnrollmentRequest):
 ##########   WAITLIST ENDPOINTS     ######################
 # student viewing their position in the waitlist
 @app.get(path="/waitlist_position", operation_id="waitlist_position", response_model = WaitlistPositionRes)
-async def waitlist_position(waitlist_request: WaitlistPositionReq):
+async def waitlist_position(student_id: int):
     """API to fetch the current position of a student in a waitlist.
     Args:
         student_id: int
@@ -242,7 +242,7 @@ async def waitlist_position(waitlist_request: WaitlistPositionReq):
         WaitlistPositionRes: WaitlistPositionRes model
     """
     result = get_waitlist_status(db_connection=db_connection, 
-                                 student_id=waitlist_request.student_id)
+                                 student_id=student_id)
     logger.info('Succesffuly executed the query')
     return WaitlistPositionRes(waitlist_positions = result)
 
