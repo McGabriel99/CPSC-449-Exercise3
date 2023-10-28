@@ -1,0 +1,17 @@
+fuse:
+  dir: "var/secondary_2/fuse"
+  allow-other: false
+  debug: false
+
+data:
+  dir: "var/secondary_2/data"
+  compress: true
+ 
+http:
+  addr: ":20204"
+
+lease:
+  type: "static"
+  hostname: "secondary_2"
+  advertise-url: "http://127.0.0.1:20202"
+  candidate: false

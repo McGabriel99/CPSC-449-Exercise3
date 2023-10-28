@@ -1,0 +1,1 @@
+foreman start --formation auth_service_primary=1,auth_service_secondary_1=1,auth_service_secondary_2=1,enrollment_service=3,krakend=1

@@ -1,0 +1,19 @@
+fuse:
+  dir: "var/primary/fuse"
+  allow-other: false
+  debug: false
+
+data:
+  dir: "var/primary/data"
+  compress: true
+
+http:
+  addr: ":20202"
+
+lease:
+  type: "static"
+  hostname: "primary"
+  advertise-url: "http://127.0.0.1:20202"
+  candidate: true
+
+exec: "uvicorn main:app --reload --port 8000 "
