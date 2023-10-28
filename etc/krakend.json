@@ -1,11 +1,6 @@
 {
     "$schema": "https://www.krakend.io/schema/v2.4/krakend.json",
     "version": 3,
-    "extra_config": {
-        "router": {
-            "return_error_msg": true
-        }
-    },
     "endpoints" : [
         {
             "endpoint" : "/api/register",
@@ -49,14 +44,19 @@
             }
         }, 
         {
-            "endpoint" : "/api/enrollment",
-            "method" : "POST",
+            "endpoint" : "/api/classes",
+            "method" : "GET",
+            "input_query_strings": [
+                "department_name"
+            ],
             "backend" : [
                 {
-                    "url_pattern": "/enrollment",
-                    "method" :"POST",
+                    "url_pattern": "/classes",
+                    "method" :"GET",
                     "host" : [
-                        "http://127.0.0.1:5100"
+                        "http://127.0.0.1:5100",
+                        "http://127.0.0.1:5101",
+                        "http://127.0.0.1:5102"
                     ],
                     "extra_config": {
                         "backend/http": {
@@ -72,6 +72,396 @@
                     "roles_key": "roles",
                     "roles_key_is_nested": false,
                     "roles" : ["Student"],                    
+                    "disable_jwk_security": true,
+                    "operation_debug": true
+                }
+            }
+        },
+        {
+            "endpoint" : "/api/enrollment",
+            "method" : "POST",
+            "backend" : [
+                {
+                    "url_pattern": "/enrollment",
+                    "method" :"POST",
+                    "host" : [
+                        "http://127.0.0.1:5100",
+                        "http://127.0.0.1:5101",
+                        "http://127.0.0.1:5102"
+                    ],
+                    "extra_config": {
+                        "backend/http": {
+                            "return_error_details": "enrollment_service"
+                        }
+                    }
+                }
+            ],
+            "extra_config": {
+                "auth/validator": {
+                    "alg": "RS256",
+                    "jwk_local_path": "./etc/jwk_public_key.json",
+                    "roles_key": "roles",
+                    "roles_key_is_nested": false,
+                    "roles" : ["Student"],                    
+                    "disable_jwk_security": true,
+                    "operation_debug": true
+                }
+            }
+        }, 
+        {
+            "endpoint" : "/api/dropcourse",
+            "method" : "PUT",
+            "backend" : [
+                {
+                    "url_pattern": "/dropcourse",
+                    "method" :"PUT",
+                    "host" : [
+                        "http://127.0.0.1:5100",
+                        "http://127.0.0.1:5101",
+                        "http://127.0.0.1:5102"
+                    ],
+                    "extra_config": {
+                        "backend/http": {
+                            "return_error_details": "enrollment_service"
+                        }
+                    }
+                }
+            ],
+            "extra_config": {
+                "auth/validator": {
+                    "alg": "RS256",
+                    "jwk_local_path": "./etc/jwk_public_key.json",
+                    "roles_key": "roles",
+                    "roles_key_is_nested": false,
+                    "roles" : ["Student"],                    
+                    "disable_jwk_security": true,
+                    "operation_debug": true
+                }
+            }
+        }, 
+        {
+            "endpoint" : "/api/waitlist_position",
+            "method" : "GET",
+            "input_query_strings": [
+                "student_id"
+            ],
+            "backend" : [
+                {
+                    "url_pattern": "/waitlist_position",
+                    "method" :"GET",
+                    "host" : [
+                        "http://127.0.0.1:5100",
+                        "http://127.0.0.1:5101",
+                        "http://127.0.0.1:5102"
+                    ],
+                    "extra_config": {
+                        "backend/http": {
+                            "return_error_details": "enrollment_service"
+                        }
+                    }
+                }
+            ],
+            "extra_config": {
+                "auth/validator": {
+                    "alg": "RS256",
+                    "jwk_local_path": "./etc/jwk_public_key.json",
+                    "roles_key": "roles",
+                    "roles_key_is_nested": false,
+                    "roles" : ["Student"],                    
+                    "disable_jwk_security": true,
+                    "operation_debug": true
+                }
+            }
+        }, 
+        {
+            "endpoint" : "/api/view_waitlist",
+            "method" : "GET",
+            "backend" : [
+                {
+                    "url_pattern": "/view_waitlist",
+                    "method" :"GET",
+                    "host" : [
+                        "http://127.0.0.1:5100",
+                        "http://127.0.0.1:5101",
+                        "http://127.0.0.1:5102"
+                    ],
+                    "extra_config": {
+                        "backend/http": {
+                            "return_error_details": "enrollment_service"
+                        }
+                    }
+                }
+            ],
+            "extra_config": {
+                "auth/validator": {
+                    "alg": "RS256",
+                    "jwk_local_path": "./etc/jwk_public_key.json",
+                    "roles_key": "roles",
+                    "roles_key_is_nested": false,
+                    "roles" : ["Instructor"],                    
+                    "disable_jwk_security": true,
+                    "operation_debug": true
+                }
+            }
+        },
+        {
+            "endpoint" : "/api/classEnrollment",
+            "method" : "GET",
+            "input_query_strings": [
+                "instructor_id",
+                "section_number",
+                "course_code"
+            ],
+            "backend" : [
+                {
+                    "url_pattern": "/classEnrollment",
+                    "method" :"GET",
+                    "host" : [
+                        "http://127.0.0.1:5100",
+                        "http://127.0.0.1:5101",
+                        "http://127.0.0.1:5102"
+                    ],
+                    "extra_config": {
+                        "backend/http": {
+                            "return_error_details": "enrollment_service"
+                        }
+                    }
+                }
+            ],
+            "extra_config": {
+                "auth/validator": {
+                    "alg": "RS256",
+                    "jwk_local_path": "./etc/jwk_public_key.json",
+                    "roles_key": "roles",
+                    "roles_key_is_nested": false,
+                    "roles" : ["Instructor"],                    
+                    "disable_jwk_security": true,
+                    "operation_debug": true
+                }
+            }
+        }, 
+        {
+            "endpoint" : "/api/classWaitlist",
+            "method" : "GET",
+            "input_query_strings": [
+                "instructor_id",
+                "section_number",
+                "course_code"
+            ],
+            "backend" : [
+                {
+                    "url_pattern": "/classWaitlist",
+                    "method" :"GET",
+                    "host" : [
+                        "http://127.0.0.1:5100",
+                        "http://127.0.0.1:5101",
+                        "http://127.0.0.1:5102"
+                    ],
+                    "extra_config": {
+                        "backend/http": {
+                            "return_error_details": "enrollment_service"
+                        }
+                    }
+                }
+            ],
+            "extra_config": {
+                "auth/validator": {
+                    "alg": "RS256",
+                    "jwk_local_path": "./etc/jwk_public_key.json",
+                    "roles_key": "roles",
+                    "roles_key_is_nested": false,
+                    "roles" : ["Instructor"],                    
+                    "disable_jwk_security": true,
+                    "operation_debug": true
+                }
+            }
+        }, 
+        {
+            "endpoint" : "/api/classDropped",
+            "method" : "GET",
+            "input_query_strings": [
+                "instructor_id",
+                "section_number",
+                "course_code"
+            ],
+            "backend" : [
+                {
+                    "url_pattern": "/classDropped",
+                    "method" :"GET",
+                    "host" : [
+                        "http://127.0.0.1:5100",
+                        "http://127.0.0.1:5101",
+                        "http://127.0.0.1:5102"
+                    ],
+                    "extra_config": {
+                        "backend/http": {
+                            "return_error_details": "enrollment_service"
+                        }
+                    }
+                }
+            ],
+            "extra_config": {
+                "auth/validator": {
+                    "alg": "RS256",
+                    "jwk_local_path": "./etc/jwk_public_key.json",
+                    "roles_key": "roles",
+                    "roles_key_is_nested": false,
+                    "roles" : ["Instructor"],                    
+                    "disable_jwk_security": true,
+                    "operation_debug": true
+                }
+            }
+        }, 
+        {
+            "endpoint" : "/api/dropStudent",
+            "method" : "POST",
+            "backend" : [
+                {
+                    "url_pattern": "/dropStudent",
+                    "method" :"POST",
+                    "host" : [
+                        "http://127.0.0.1:5100",
+                        "http://127.0.0.1:5101",
+                        "http://127.0.0.1:5102"
+                    ],
+                    "extra_config": {
+                        "backend/http": {
+                            "return_error_details": "enrollment_service"
+                        }
+                    }
+                }
+            ],
+            "extra_config": {
+                "auth/validator": {
+                    "alg": "RS256",
+                    "jwk_local_path": "./etc/jwk_public_key.json",
+                    "roles_key": "roles",
+                    "roles_key_is_nested": false,
+                    "roles" : ["Instructor"],                    
+                    "disable_jwk_security": true,
+                    "operation_debug": true
+                }
+            }
+        }, 
+        {
+            "endpoint" : "/api/classes",
+            "method" : "POST",
+            "backend" : [
+                {
+                    "url_pattern": "/classes",
+                    "method" :"POST",
+                    "host" : [
+                        "http://127.0.0.1:5100",
+                        "http://127.0.0.1:5101",
+                        "http://127.0.0.1:5102"
+                    ],
+                    "extra_config": {
+                        "backend/http": {
+                            "return_error_details": "enrollment_service"
+                        }
+                    }
+                }
+            ],
+            "extra_config": {
+                "auth/validator": {
+                    "alg": "RS256",
+                    "jwk_local_path": "./etc/jwk_public_key.json",
+                    "roles_key": "roles",
+                    "roles_key_is_nested": false,
+                    "roles" : ["Registrar"],                    
+                    "disable_jwk_security": true,
+                    "operation_debug": true
+                }
+            }
+        }, 
+        {
+            "endpoint" : "/api/sections",
+            "method" : "DELETE",
+            "backend" : [
+                {
+                    "url_pattern": "/sections",
+                    "method" :"DELETE",
+                    "host" : [
+                        "http://127.0.0.1:5100",
+                        "http://127.0.0.1:5101",
+                        "http://127.0.0.1:5102"
+                    ],
+                    "extra_config": {
+                        "backend/http": {
+                            "return_error_details": "enrollment_service"
+                        }
+                    }
+                }
+            ],
+            "extra_config": {
+                "auth/validator": {
+                    "alg": "RS256",
+                    "jwk_local_path": "./etc/jwk_public_key.json",
+                    "roles_key": "roles",
+                    "roles_key_is_nested": false,
+                    "roles" : ["Registrar"],                    
+                    "disable_jwk_security": true,
+                    "operation_debug": true
+                }
+            }
+        }, 
+        {
+            "endpoint" : "/api/changeSectionInstructor",
+            "method" : "POST",
+            "backend" : [
+                {
+                    "url_pattern": "/changeSectionInstructor",
+                    "method" :"POST",
+                    "host" : [
+                        "http://127.0.0.1:5100",
+                        "http://127.0.0.1:5101",
+                        "http://127.0.0.1:5102"
+                    ],
+                    "extra_config": {
+                        "backend/http": {
+                            "return_error_details": "enrollment_service"
+                        }
+                    }
+                }
+            ],
+            "extra_config": {
+                "auth/validator": {
+                    "alg": "RS256",
+                    "jwk_local_path": "./etc/jwk_public_key.json",
+                    "roles_key": "roles",
+                    "roles_key_is_nested": false,
+                    "roles" : ["Registrar"],                    
+                    "disable_jwk_security": true,
+                    "operation_debug": true
+                }
+            }
+        }, 
+        {
+            "endpoint" : "/api/freezeEnrollment",
+            "method" : "POST",
+            "backend" : [
+                {
+                    "url_pattern": "/freezeEnrollment",
+                    "method" :"POST",
+                    "host" : [
+                        "http://127.0.0.1:5100",
+                        "http://127.0.0.1:5101",
+                        "http://127.0.0.1:5102"
+                    ],
+                    "extra_config": {
+                        "backend/http": {
+                            "return_error_details": "enrollment_service"
+                        }
+                    }
+                }
+            ],
+            "extra_config": {
+                "auth/validator": {
+                    "alg": "RS256",
+                    "jwk_local_path": "./etc/jwk_public_key.json",
+                    "roles_key": "roles",
+                    "roles_key_is_nested": false,
+                    "roles" : ["Registrar"],                    
                     "disable_jwk_security": true,
                     "operation_debug": true
                 }

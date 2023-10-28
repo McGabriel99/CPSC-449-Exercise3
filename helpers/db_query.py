@@ -19,6 +19,7 @@ def get_db():
 
 def get_db_reads():
     target_db = read_dbs[next(index)]
+    print(target_db)
     with contextlib.closing(sqlite3.connect(target_db)) as db:
         db.row_factory = sqlite3.Row
         yield db
