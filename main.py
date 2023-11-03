@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, status, Depends
+from fastapi import FastAPI, HTTPException, status
 
 from models import NewAccountRequest
 from http import HTTPStatus
@@ -12,6 +12,9 @@ app = FastAPI()
 
 @app.get("/")
 async def root():
+    # test logger
+    logger = logging.getLogger("__name__")
+    logger.info("Root Endpoint accessed using logging.ini")
     return {"message": "User Authentication services"}
 
 @app.post("/register")
